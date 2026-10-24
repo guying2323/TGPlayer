@@ -10,3 +10,6 @@ captures/
 .kotlin/
 *.log
 .archify/
+keystore.properties
+*.jks
+*.keystore
