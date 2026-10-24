@@ -8,7 +8,7 @@ TGPlayer 用你自己的 Telegram 账号登录，浏览聊天、频道和群组�
 
 ## 架构图
 
-![TGPlayer 架构图](docs/architecture.svg)
+![TGPlayer 架构图](docs/tmplayer-android.svg)
 
 > 上图由 archify 生成；交互版（可缩放、悬停/深色模式）见 [docs/architecture.html](docs/architecture.html)，分层说明见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
