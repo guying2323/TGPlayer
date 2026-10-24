@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TGPlayer — 你的 Telegram 影视库</title>
+<meta name="description" content="TGPlayer 是一个非官方 Telegram 视频播放器：登录自己的账号，把聊天、频道里的视频变成可浏览、可下载、可收藏的影视库。">
+<meta name="theme-color" content="#0b0f14">
+<style>
+:root{
+  --bg:#0b0f14; --bg2:#0f151d; --surface:#151c25; --surface2:#1b2430;
+  --line:rgba(255,255,255,.08); --text:#e8edf5; --muted:#93a0b4;
+  --primary:#a4c9fe; --primary2:#7fb3f5; --accent:#4fd1c5; --gold:#e5b650;
+  --radius:18px; --max:1120px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 700px at 80% -10%,rgba(164,201,254,.14),transparent 60%),radial-gradient(900px 600px at -10% 30%,rgba(79,209,197,.08),transparent 55%),var(--bg);color:var(--text);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img,svg{display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);background:rgba(11,15,20,.72);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:22px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}
+.brand .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(145deg,#0f1620,#1b2633);display:grid;place-items:center;border:1px solid var(--line)}
+.brand .mark svg{width:16px;height:16px}
+.nav-links{display:flex;gap:20px;margin-left:auto;align-items:center;color:var(--muted);font-size:14px}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;font-weight:650;font-size:14px;border:1px solid transparent;transition:transform .2s,background .2s,border-color .2s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#0a1728}
+.btn-primary:hover{background:#b9d7ff}
+.btn-ghost{border-color:var(--line);background:rgba(255,255,255,.03);color:var(--text)}
+.btn-ghost:hover{border-color:rgba(164,201,254,.4);background:rgba(164,201,254,.06)}
+.hero{position:relative;overflow:hidden;padding:74px 0 40px}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--primary);background:rgba(164,201,254,.09);border:1px solid rgba(164,201,254,.18);padding:6px 12px;border-radius:999px;margin-bottom:20px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+h1{margin:0 0 18px;font-size:clamp(36px,5vw,60px);line-height:1.08;letter-spacing:-1.5px;font-weight:850}
+h1 .grad{background:linear-gradient(100deg,var(--primary),var(--accent) 55%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:17px;color:var(--muted);max-width:560px;margin:0 0 26px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.meta{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:12.5px}
+.meta span{display:inline-flex;align-items:center;gap:6px}
+.hero-art{position:relative;display:flex;justify-content:center}
+.hero-art .glow{position:absolute;inset:8% 4%;background:radial-gradient(circle at 50% 45%,rgba(164,201,254,.22),rgba(79,209,197,.08) 45%,transparent 70%);filter:blur(30px)}
+.hero-phone{position:relative;transform:rotate(2deg)}
+.phone{width:272px;flex:0 0 auto;background:#05080c;border-radius:38px;padding:9px;border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);position:relative}
+.phone::after{content:"";position:absolute;top:14px;left:50%;transform:translateX(-50%);width:74px;height:18px;border-radius:999px;background:#05080c;z-index:6}
+.screen{height:566px;border-radius:30px;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px 2px;font-size:9px;color:rgba(255,255,255,.72);letter-spacing:.2px}
+.statusbar .icons{display:flex;gap:4px;align-items:center;opacity:.8}
+.statusbar .icons i{width:9px;height:7px;border-radius:2px;background:rgba(255,255,255,.7);display:block}
+.appbar{display:flex;align-items:center;gap:8px;padding:10px 14px 6px;font-size:13px;font-weight:750}
+.appbar .spacer{flex:1}
+.ic{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:rgba(255,255,255,.8)}
+.body{flex:1;overflow:hidden;padding:0 12px 12px;display:flex;flex-direction:column;gap:9px}
+.tiny{font-size:8.5px;line-height:1.45;color:var(--muted)}
+.hero-card{height:118px;border-radius:13px;position:relative;overflow:hidden;background:linear-gradient(120deg,#26364a,#3a2b24 70%,#1b2a2a);border:1px solid rgba(255,255,255,.07)}
+.hero-card:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.72),transparent 65%)}
+.hero-card .hc-text{position:absolute;left:10px;right:10px;bottom:9px}
+.hc-title{font-size:11px;font-weight:750;line-height:1.3}
+.hc-sub{font-size:7.5px;color:var(--accent)}
+.hc-bar{height:3px;border-radius:9px;background:rgba(255,255,255,.22);margin-top:6px;overflow:hidden}
+.hc-bar i{display:block;height:100%;width:46%;background:var(--gold);border-radius:9px}
+.play-dot{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.4);display:grid;place-items:center}
+.play-dot svg{width:13px;height:13px;fill:#fff;stroke:none;margin-left:2px}
+.sec-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.sec-title{font-size:10.5px;font-weight:750}
+.sec-more{font-size:7.5px;color:var(--muted)}
+.row-cards{display:flex;gap:7px;overflow:hidden}
+.mini-card{width:104px;flex:0 0 auto}
+.mini-thumb{height:58px;border-radius:8px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+.mini-thumb:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--primary) 52%,rgba(255,255,255,.18) 52%)}
+.mini-thumb .badge{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.65);border-radius:3px;padding:0 3px;font-size:6.5px;color:#fff}
+.mini-title{font-size:7.5px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.chips{display:flex;gap:6px;margin:2px 0 2px}
+.chip{font-size:8px;padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.on{background:rgba(164,201,254,.14);border-color:rgba(164,201,254,.35);color:var(--primary)}
+.chat-row{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+.avatar{width:26px;height:26px;border-radius:8px;flex:0 0 auto;display:grid;place-items:center;font-size:9px;font-weight:800;color:#0b0f14}
+.chat-meta{flex:1;min-width:0}
+.chat-name{font-size:9px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-sub{font-size:7px;color:var(--muted)}
+.chat-date{font-size:6.5px;color:var(--muted)}
+.star{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;color:var(--muted)}
+.star.on{fill:var(--gold);stroke:var(--gold)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.v-card{border-radius:9px;overflow:hidden;background:var(--surface);border:1px solid rgba(255,255,255,.05)}
+.v-thumb{height:57px;position:relative;border-bottom:1px solid rgba(255,255,255,.05)}
+.v-thumb .dur{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.72);border-radius:3px;padding:0 3px;font-size:6.5px}
+.v-thumb .prog{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(255,255,255,.2)}
+.v-thumb .prog i{display:block;height:100%;width:42%;background:var(--primary)}
+.v-meta{padding:4px 5px 5px}
+.v-title{font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v-sub{font-size:6px;color:var(--muted);display:flex;justify-content:space-between;margin-top:2px}
+.v-actions{display:flex;justify-content:space-between;align-items:center;margin-top:2px}
+.v-actions span{font-size:6px;color:var(--primary)}
+.player-screen{background:#000}
+.video{flex:1;position:relative;background:radial-gradient(circle at 50% 40%,#1c2a38,#070a0d 70%);display:grid;place-items:center}
+.video .big-play{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.35);display:grid;place-items:center}
+.video .big-play svg{width:17px;height:17px;fill:#fff;stroke:none;margin-left:2px}
+.player-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:7px;padding:10px 12px;background:linear-gradient(180deg,rgba(0,0,0,.65),transparent);font-size:9px;font-weight:650}
+.player-bottom{position:absolute;left:0;right:0;bottom:0;padding:10px 12px 12px;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent)}
+.seek{height:3px;border-radius:9px;background:rgba(255,255,255,.26);position:relative;margin-bottom:6px}
+.seek i{position:absolute;left:0;top:0;bottom:0;width:56%;border-radius:9px;background:var(--primary)}
+.seek b{position:absolute;left:56%;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#fff}
+.p-times{display:flex;justify-content:space-between;font-size:6.5px;color:rgba(255,255,255,.8)}
+.p-controls{display:flex;justify-content:space-between;align-items:center;margin-top:5px;color:rgba(255,255,255,.85)}
+.p-controls .c{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:5.5px}
+.dl-row{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid rgba(255,255,255,.05);border-radius:9px;padding:7px 8px}
+.dl-meta{flex:1;min-width:0}
+.dl-name{font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dl-sub{font-size:6.5px;color:var(--muted)}
+.dl-bar{height:3px;border-radius:9px;background:rgba(255,255,255,.12);margin-top:4px;overflow:hidden}
+.dl-bar i{display:block;height:100%;background:var(--gold);border-radius:9px}
+.dl-icon{width:18px;height:18px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center}
+.set-group{background:var(--surface);border:1px solid rgba(255,255,255,.05);border-radius:10px;overflow:hidden}
+.set-row{display:flex;align-items:center;gap:7px;padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.05);font-size:8px}
+.set-row:last-child{border-bottom:0}
+.set-row .ic{width:12px;height:12px;color:var(--muted)}
+.set-row .val{margin-left:auto;font-size:6.5px;color:var(--muted)}
+.toggle{width:22px;height:12px;border-radius:999px;background:var(--primary);position:relative;margin-left:auto}
+.toggle:after{content:"";position:absolute;right:1.5px;top:1.5px;width:9px;height:9px;border-radius:50%;background:#0a1728}
+.section{padding:84px 0}
+.section-head{max-width:720px;margin-bottom:36px}
+.kicker{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--primary);font-weight:700;margin-bottom:10px}
+h2{margin:0 0 12px;font-size:clamp(26px,3.4vw,38px);letter-spacing:-.8px;line-height:1.15}
+.section-head p{margin:0;color:var(--muted)}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feature{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:transform .25s,border-color .25s,background .25s}
+.feature:hover{transform:translateY(-4px);border-color:rgba(164,201,254,.28);background:linear-gradient(180deg,rgba(164,201,254,.07),rgba(255,255,255,.015))}
+.feature .f-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:rgba(164,201,254,.1);border:1px solid rgba(164,201,254,.18);margin-bottom:14px}
+.feature .f-ic svg{width:19px;height:19px;stroke:var(--primary);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.feature h3{margin:0 0 6px;font-size:16px}
+.feature p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.6}
+.preview{display:grid;grid-template-columns:repeat(3,1fr);gap:28px 22px;justify-items:center}
+.shot{display:flex;flex-direction:column;align-items:center;gap:14px}
+.shot .phone{width:250px}
+.shot .screen{height:520px}
+.shot .cap{text-align:center}
+.shot .cap b{display:block;font-size:14px}
+.shot .cap span{color:var(--muted);font-size:12px}
+.arch{display:grid;grid-template-columns:1fr 1.1fr;gap:40px;align-items:center}
+.arch-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;overflow:hidden}
+.arch-box img{width:100%;height:auto;border-radius:10px;background:#0c1117}
+.stack{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.pill{font-size:12.5px;color:var(--muted);border:1px solid var(--line);padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.02)}
+.dl-box{display:grid;grid-template-columns:1.2fr .8fr;gap:26px;background:linear-gradient(120deg,rgba(164,201,254,.1),rgba(79,209,197,.05));border:1px solid rgba(164,201,254,.2);border-radius:24px;padding:36px}
+.dl-box h2{margin-top:0}
+.dl-list{display:grid;gap:10px;margin-top:18px}
+.dl-item{display:flex;justify-content:space-between;gap:14px;font-size:13px;color:var(--muted);border-bottom:1px dashed rgba(255,255,255,.09);padding-bottom:9px}
+.dl-item b{color:var(--text);font-weight:650}
+.note{font-size:12px;color:var(--muted);margin-top:16px}
+footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:12.5px}
+.foot{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.foot a{color:var(--muted)} .foot a:hover{color:var(--text)}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.section{scroll-behavior:auto}}
+@media (max-width:980px){
+  .hero-grid{grid-template-columns:1fr;gap:34px}
+  .hero-art{order:-1}
+  .features{grid-template-columns:1fr 1fr}
+  .preview{grid-template-columns:1fr 1fr}
+  .arch,.dl-box{grid-template-columns:1fr}
+}
+@media (max-width:680px){
+  .nav-links{display:none}
+  .features,.preview{grid-template-columns:1fr}
+  .shot .phone{width:270px}
+  .section{padding:62px 0}
+  .hero{padding-top:44px}
+}
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7V5z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6a8 8 0 1 1 18-3z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5A4 4 0 0 1 6.6 6c-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a4 4 0 0 1 1.1 2.8c0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <span class="mark"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7V5z" fill="#4fd1c5"/><circle cx="16.5" cy="16.5" r="2" fill="#e5b650"/></svg></span>
+      TGPlayer
+    </a>
+    <nav class="nav-links">
+      <a href="#features">功能</a>
+      <a href="#preview">UI 预览</a>
+      <a href="#stack">架构</a>
+      <a href="#download">下载</a>
+      <a class="btn btn-ghost" href="https://github.com/guying2323/TGPlayer" target="_blank" rel="noreferrer">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot"></span>Android 8.0+ · arm64 · GPL-3.0</div>
+      <h1>把 Telegram 里的视频，<br><span class="grad">变成你的影视库</span></h1>
+      <p class="lead">登录自己的账号，浏览聊天、频道、群组里的视频。边下边播、离线下载、收藏、字幕、多账号——一个真正为看片设计的 Telegram 客户端。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://github.com/guying2323/TGPlayer/releases/latest" target="_blank" rel="noreferrer">
+          <svg class="ic" style="width:16px;height:16px;color:#0a1728"><use href="#i-download"/></svg> 下载 APK
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/guying2323/TGPlayer" target="_blank" rel="noreferrer">
+          <svg class="ic" style="width:16px;height:16px"><use href="#i-github"/></svg> 查看源码
+        </a>
+      </div>
+      <div class="meta">
+        <span>非官方客户端</span><span>数据只在本机</span><span>Release 32 MB</span>
+      </div>
+    </div>
+
+    <div class="hero-art">
+      <div class="glow"></div>
+      <div class="phone hero-phone">
+        <div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="icons"><i></i><i></i><i></i></span></div>
+          <div class="appbar"><span>TGPlayer</span><span class="spacer"></span>
+            <svg class="ic"><use href="#i-search"/></svg><svg class="ic"><use href="#i-star"/></svg><svg class="ic"><use href="#i-folder"/></svg>
+          </div>
+          <div class="body">
+            <div class="hero-card">
+              <div class="play-dot"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7V5z"/></svg></div>
+              <div class="hc-text">
+                <div class="hc-sub">继续观看 · 深海频道</div>
+                <div class="hc-title">蓝色星球：深海篇 · 第 3 集</div>
+                <div class="hc-bar"><i></i></div>
+              </div>
+            </div>
+            <div class="sec-row"><span class="sec-title">继续观看</span><span class="sec-more">全部</span></div>
+            <div class="row-cards">
+              <div class="mini-card"><div class="mini-thumb" style="background:linear-gradient(135deg,#22405a,#101820)"><span class="badge">24:18</span></div><div class="mini-title">城市夜行</div></div>
+              <div class="mini-card"><div class="mini-thumb" style="background:linear-gradient(135deg,#3a2a22,#19110d)"><span class="badge">12:04</span></div><div class="mini-title">厨房日记</div></div>
+              <div class="mini-card"><div class="mini-thumb" style="background:linear-gradient(135deg,#1d3b36,#0d1816)"><span class="badge">48:52</span></div><div class="mini-title">纪录片合集</div></div>
+            </div>
+            <div class="sec-row"><span class="sec-title">聊天</span><span class="sec-more">全部</span></div>
+            <div class="row-cards">
+              <div class="mini-card" style="width:100px"><div class="mini-thumb" style="height:40px;background:linear-gradient(135deg,#25384d,#121a23)"></div><div class="mini-title">电影频道</div></div>
+              <div class="mini-card" style="width:100px"><div class="mini-thumb" style="height:40px;background:linear-gradient(135deg,#3d2b3f,#171018)"></div><div class="mini-title">剧集群组</div></div>
+              <div class="mini-card" style="width:100px"><div class="mini-thumb" style="height:40px;background:linear-gradient(135deg,#1f3b3a,#0d1a19)"></div><div class="mini-title">收藏夹</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">Features</div>
+      <h2>为看片而设计，不是为聊天</h2>
+      <p>保留 Telegram 的账号与内容，重新组织成影视 App 的浏览方式：分区、筛选、收藏、队列、下载。</p>
+    </div>
+    <div class="features">
+      <div class="feature reveal"><div class="f-ic"><svg><use href="#i-chat"/></svg></div><h3>扫码 / 手机号登录</h3><p>扫码或手机号 + 验证码登录，支持两步验证；TDLib 会话只落在应用私有目录，不经过任何中转服务器。</p></div>
+      <div class="feature reveal"><div class="f-ic"><svg><use href="#i-home"/></svg></div><h3>影视库式浏览</h3><p>频道、群组、私聊分类，最近/名称排序；视频海报网格、聊天内搜索、#标签筛选，不再是瀑布流聊天记录。</p></div>
+      <div class="feature reveal"><div class="f-ic"><svg><use href="#i-play"/></svg></div><h3>边下边播</h3><p>NextPlayer 播放核心，TDLib 流式字节窗口；起播不用等整段下载完，拖动进度会重新定向下载。</p></div>
+      <div class="feature reveal"><div class="f-ic"><svg><use href="#i-download"/></svg></div><h3>后台下载</h3><p>WorkManager 前台任务，通知栏进度，最多 2 个并发；暂停 / 恢复 / 删除，完成后可直接离线播放。</p></div>
+      <div class="feature reveal"><div class="f-ic"><svg><use href="#i-star"/></svg></div><h3>收藏与队列</h3><p>收藏整个频道/群组或单条视频；播放队列按当前筛选结果串起来，播完自动下一个。</p></div>
+      <div class="feature reveal"><div class="f-ic"><svg><use href="#i-settings"/></svg></div><h3>现代 Android 适配</h3><p>edge-to-edge、predictive back、手机底栏 / 平板与 TV 侧栏、动态取色、16 KB page 对齐，arm64 单 ABI。</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="preview" style="background:linear-gradient(180deg,rgba(255,255,255,.02),transparent)">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">UI Preview</div>
+      <h2>界面预览</h2>
+      <p>基于 Findroid 的深色 Material 3 视觉与 NextPlayer 播放控制层，手机 / 平板 / TV 自适应。以下为界面结构示意。</p>
+    </div>
+    <div class="preview">
+
+      <div class="shot reveal">
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="icons"><i></i><i></i><i></i></span></div>
+          <div class="appbar"><span>首页</span><span class="spacer"></span><svg class="ic"><use href="#i-search"/></svg><svg class="ic"><use href="#i-star"/></svg></div>
+          <div class="body">
+            <div class="hero-card"><div class="play-dot"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7V5z"/></svg></div><div class="hc-text"><div class="hc-sub">继续观看 · 纪录片频道</div><div class="hc-title">地球脉动 · 第 2 集</div><div class="hc-bar"><i></i></div></div></div>
+            <div class="sec-row"><span class="sec-title">继续观看</span><span class="sec-more">全部</span></div>
+            <div class="row-cards"><div class="mini-card"><div class="mini-thumb" style="background:linear-gradient(135deg,#253c53,#0e151d)"></div><div class="mini-title">城市漫游</div></div><div class="mini-card"><div class="mini-thumb" style="background:linear-gradient(135deg,#3a2a24,#17100d)"></div><div class="mini-title">深夜食堂</div></div></div>
+            <div class="sec-row"><span class="sec-title">聊天</span><span class="sec-more">全部</span></div>
+            <div class="row-cards"><div class="mini-card" style="width:100px"><div class="mini-thumb" style="height:42px;background:linear-gradient(135deg,#1f3b3a,#0d1a19)"></div><div class="mini-title">电影频道</div></div><div class="mini-card" style="width:100px"><div class="mini-thumb" style="height:42px;background:linear-gradient(135deg,#3d2b3f,#171018)"></div><div class="mini-title">追剧群组</div></div></div>
+          </div>
+        </div></div>
+        <div class="cap"><b>首页</b><span>继续观看 + 分区横滑</span></div>
+      </div>
+
+      <div class="shot reveal">
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="icons"><i></i><i></i><i></i></span></div>
+          <div class="appbar"><span>媒体</span><span class="spacer"></span><svg class="ic"><use href="#i-search"/></svg><svg class="ic"><use href="#i-settings"/></svg></div>
+          <div class="body">
+            <div class="chips"><span class="chip on">全部</span><span class="chip">频道</span><span class="chip">群组</span><span class="chip">私聊</span></div>
+            <div class="chat-row"><div class="avatar" style="background:linear-gradient(135deg,#a4c9fe,#4fd1c5)">电</div><div class="chat-meta"><div class="chat-name">电影频道</div><div class="chat-sub">打开查看视频</div></div><span class="chat-date">10-24</span><svg class="star on"><use href="#i-star"/></svg></div>
+            <div class="chat-row"><div class="avatar" style="background:linear-gradient(135deg,#e5b650,#e9a6a6)">追</div><div class="chat-meta"><div class="chat-name">追剧群组</div><div class="chat-sub">打开查看视频</div></div><span class="chat-date">10-23</span><svg class="star"><use href="#i-star"/></svg></div>
+            <div class="chat-row"><div class="avatar" style="background:linear-gradient(135deg,#a9a6f5,#8fc7e8)">纪</div><div class="chat-meta"><div class="chat-name">纪录片分享</div><div class="chat-sub">打开查看视频</div></div><span class="chat-date">10-21</span><svg class="star on"><use href="#i-star"/></svg></div>
+            <div class="chat-row"><div class="avatar" style="background:linear-gradient(135deg,#8fc7e8,#4fd1c5)">动</div><div class="chat-meta"><div class="chat-name">动漫资源</div><div class="chat-sub">打开查看视频</div></div><span class="chat-date">10-20</span><svg class="star"><use href="#i-star"/></svg></div>
+          </div>
+        </div></div>
+        <div class="cap"><b>媒体库</b><span>筛选 · 排序 · 收藏</span></div>
+      </div>
+
+      <div class="shot reveal">
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="icons"><i></i><i></i><i></i></span></div>
+          <div class="appbar"><svg class="ic"><use href="#i-back"/></svg><span style="font-size:11px">电影频道</span><span class="spacer"></span><svg class="ic on" style="color:var(--gold);fill:var(--gold)"><use href="#i-star"/></svg></div>
+          <div class="body">
+            <div class="chips"><span class="chip on">全部</span><span class="chip">#科幻</span><span class="chip">#纪录片</span></div>
+            <div class="grid2">
+              <div class="v-card"><div class="v-thumb" style="background:linear-gradient(135deg,#28425c,#0e151d)"><span class="dur">1:42:10</span><span class="prog"><i></i></span></div><div class="v-meta"><div class="v-title">沙丘 2</div><div class="v-sub"><span>4K</span><span>2024</span></div><div class="v-actions"><span>下载</span><svg class="star on"><use href="#i-star"/></svg></div></div></div>
+              <div class="v-card"><div class="v-thumb" style="background:linear-gradient(135deg,#3a2b24,#17100d)"><span class="dur">52:30</span><span class="prog"><i></i></span></div><div class="v-meta"><div class="v-title">宇宙时空之旅</div><div class="v-sub"><span>1080p</span><span>2023</span></div><div class="v-actions"><span>下载</span><svg class="star"><use href="#i-star"/></svg></div></div></div>
+              <div class="v-card"><div class="v-thumb" style="background:linear-gradient(135deg,#1f3b3a,#0d1a19)"><span class="dur">48:52</span></div><div class="v-meta"><div class="v-title">蓝色星球</div><div class="v-sub"><span>4K</span><span>2024</span></div><div class="v-actions"><span>下载</span><svg class="star on"><use href="#i-star"/></svg></div></div></div>
+              <div class="v-card"><div class="v-thumb" style="background:linear-gradient(135deg,#3d2b3f,#171018)"><span class="dur">2:08:44</span></div><div class="v-meta"><div class="v-title">银翼杀手 2049</div><div class="v-sub"><span>1080p</span><span>2017</span></div><div class="v-actions"><span>下载</span><svg class="star"><use href="#i-star"/></svg></div></div></div>
+              <div class="v-card"><div class="v-thumb" style="background:linear-gradient(135deg,#243a4d,#0d141b)"><span class="dur">24:18</span></div><div class="v-meta"><div class="v-title">城市夜行</div><div class="v-sub"><span>720p</span><span>2025</span></div><div class="v-actions"><span>下载</span><svg class="star"><use href="#i-star"/></svg></div></div></div>
+              <div class="v-card"><div class="v-thumb" style="background:linear-gradient(135deg,#2a2a52,#10101f)"><span class="dur">12:04</span></div><div class="v-meta"><div class="v-title">厨房日记</div><div class="v-sub"><span>1080p</span><span>2025</span></div><div class="v-actions"><span>下载</span><svg class="star"><use href="#i-star"/></svg></div></div></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap"><b>视频库</b><span>海报网格 · 标签 · 收藏</span></div>
+      </div>
+
+      <div class="shot reveal">
+        <div class="phone"><div class="screen player-screen">
+          <div class="statusbar"><span>9:41</span><span class="icons"><i></i><i></i><i></i></span></div>
+          <div class="video">
+            <div class="player-top"><svg class="ic" style="color:#fff"><use href="#i-back"/></svg><span>沙丘 2</span><span class="spacer" style="flex:1"></span><svg class="ic" style="color:#fff"><use href="#i-star"/></svg><svg class="ic" style="color:#fff"><use href="#i-download"/></svg></div>
+            <div class="big-play"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7V5z"/></svg></div>
+            <div class="player-bottom">
+              <div class="seek"><i></i><b></b></div>
+              <div class="p-times"><span>1:02:44</span><span>1:42:10</span></div>
+              <div class="p-controls"><span class="c">倍速</span><span class="c">画面</span><span class="c">锁定</span><span class="c">下一个</span></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap"><b>播放器</b><span>NextPlayer 控制层 · 手势 · 字幕</span></div>
+      </div>
+
+      <div class="shot reveal">
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="icons"><i></i><i></i><i></i></span></div>
+          <div class="appbar"><span>下载</span><span class="spacer"></span><svg class="ic"><use href="#i-settings"/></svg></div>
+          <div class="body">
+            <div style="font-size:7px;color:var(--muted);margin:2px 0">已占用 3.8 GB</div>
+            <div class="tiny" style="color:var(--primary);font-weight:700;margin-top:4px">进行中</div>
+            <div class="dl-row"><div class="avatar" style="background:linear-gradient(135deg,#a4c9fe,#4fd1c5)">沙</div><div class="dl-meta"><div class="dl-name">沙丘 2</div><div class="dl-sub">下载中 42% · 5.6 MB/s</div><div class="dl-bar"><i style="width:42%"></i></div></div><div class="dl-icon"><svg class="ic" style="width:9px;height:9px"><use href="#i-download"/></svg></div></div>
+            <div class="dl-row"><div class="avatar" style="background:linear-gradient(135deg,#e5b650,#e9a6a6)">蓝</div><div class="dl-meta"><div class="dl-name">蓝色星球</div><div class="dl-sub">等待中（仅 Wi-Fi 时开始）</div><div class="dl-bar"><i style="width:12%;background:rgba(255,255,255,.3)"></i></div></div><div class="dl-icon"><svg class="ic" style="width:9px;height:9px"><use href="#i-download"/></svg></div></div>
+            <div class="tiny" style="color:var(--primary);font-weight:700;margin-top:6px">已完成</div>
+            <div class="dl-row"><div class="avatar" style="background:linear-gradient(135deg,#1f3b3a,#0d1a19)">地</div><div class="dl-meta"><div class="dl-name">地球脉动 · S2</div><div class="dl-sub">1.2 GB</div></div><div class="dl-icon"><svg class="ic" style="width:9px;height:9px;fill:currentColor;color:var(--primary)"><use href="#i-play"/></svg></div></div>
+          </div>
+        </div></div>
+        <div class="cap"><b>下载</b><span>后台任务 · 速度 · 离线播放</span></div>
+      </div>
+
+      <div class="shot reveal">
+        <div class="phone"><div class="screen">
+          <div class="statusbar"><span>9:41</span><span class="icons"><i></i><i></i><i></i></span></div>
+          <div class="appbar"><svg class="ic"><use href="#i-back"/></svg><span>设置</span></div>
+          <div class="body">
+            <div class="tiny" style="color:var(--primary);font-weight:700">播放</div>
+            <div class="set-group">
+              <div class="set-row"><svg class="ic"><use href="#i-play"/></svg><span>自动续播</span><span class="toggle"></span></div>
+              <div class="set-row"><svg class="ic"><use href="#i-home"/></svg><span>记住播放进度</span><span class="toggle"></span></div>
+              <div class="set-row"><svg class="ic"><use href="#i-settings"/></svg><span>默认倍速</span><span class="val">1.0×</span></div>
+            </div>
+            <div class="tiny" style="color:var(--primary);font-weight:700;margin-top:5px">下载与显示</div>
+            <div class="set-group">
+              <div class="set-row"><svg class="ic"><use href="#i-download"/></svg><span>仅 Wi-Fi 下载</span><span class="toggle"></span></div>
+              <div class="set-row"><svg class="ic"><use href="#i-folder"/></svg><span>已用空间</span><span class="val">3.8 GB</span></div>
+              <div class="set-row"><svg class="ic"><use href="#i-settings"/></svg><span>主题</span><span class="val">跟随系统</span></div>
+            </div>
+            <div class="tiny" style="color:var(--primary);font-weight:700;margin-top:5px">账号</div>
+            <div class="set-group">
+              <div class="set-row"><svg class="ic"><use href="#i-chat"/></svg><span>账号 1（当前）</span><span class="val">@tgplayer</span></div>
+              <div class="set-row"><svg class="ic"><use href="#i-star"/></svg><span>添加账号</span><span class="val">›</span></div>
+            </div>
+          </div>
+        </div></div>
+        <div class="cap"><b>设置</b><span>主题 · 下载 · 多账号</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section" id="stack">
+  <div class="wrap">
+    <div class="arch">
+      <div class="reveal">
+        <div class="kicker">Architecture</div>
+        <h2>干净分层，数据只走本机</h2>
+        <p style="color:var(--muted);margin:0 0 16px">Compose UI → ViewModel → Repository → TDLib；播放器独立于数据层，下载由 WorkManager 托管。没有自建服务器，没有中转流量。</p>
+        <div class="stack">
+          <span class="pill">Kotlin 2.4</span><span class="pill">Compose + M3</span><span class="pill">TDLib</span><span class="pill">Media3</span><span class="pill">NextPlayer 核心</span><span class="pill">WorkManager</span><span class="pill">R8</span><span class="pill">arm64</span>
+        </div>
+        <p style="margin-top:18px"><a class="btn btn-ghost" href="architecture.html">查看交互式架构图</a></p>
+      </div>
+      <div class="arch-box reveal">
+        <img src="tmplayer-android.svg" alt="TGPlayer 架构图" loading="lazy">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="download">
+  <div class="wrap">
+    <div class="dl-box reveal">
+      <div>
+        <div class="kicker">Download</div>
+        <h2>下载 TGPlayer 0.22.0</h2>
+        <p style="color:var(--muted);margin:0">Android 8.0+ · arm64-v8a · 32 MB（R8 压缩版）</p>
+        <div class="dl-list">
+          <div class="dl-item"><span>APK</span><b>31.8 MB</b></div>
+          <div class="dl-item"><span>版本</span><b>0.22.0 / versionCode 30</b></div>
+          <div class="dl-item"><span>许可</span><b>GPL-3.0-or-later</b></div>
+          <div class="dl-item"><span>包名</span><b>com.tgplayer.android</b></div>
+        </div>
+        <p class="note">新包名会被系统视为新应用，旧 tmplayer 的登录/收藏/下载数据不会继承，首次需重新登录。</p>
+        <div class="hero-actions" style="margin-top:18px;margin-bottom:0">
+          <a class="btn btn-primary" href="https://github.com/guying2323/TGPlayer/releases/latest" target="_blank" rel="noreferrer">前往 GitHub Releases</a>
+          <a class="btn btn-ghost" href="https://github.com/guying2323/TGPlayer" target="_blank" rel="noreferrer">源代码</a>
+        </div>
+      </div>
+      <div>
+        <div class="arch-box" style="padding:20px">
+          <div style="font-size:12px;color:var(--muted);line-height:1.9">
+            <b style="color:var(--text)">安装步骤</b><br>
+            1. 下载 <code style="color:var(--primary)">TGPlayer-0.22.0.apk</code><br>
+            2. 允许「安装未知应用」<br>
+            3. 打开后扫码 / 手机号登录<br>
+            4. 首次启动跟随引导设置下载偏好
+          </div>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)">
+            校验 SHA-256<br><span style="color:var(--text);word-break:break-all">3D9BC09DF64461B6DBE0158E563591894EC16B85415D93893476754720213704</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>TGPlayer · 非官方 Telegram 客户端 · 数据仅保存在本机</span>
+    <span><a href="https://github.com/guying2323/TGPlayer">GitHub</a> · <a href="https://github.com/guying2323/TGPlayer/releases">Releases</a> · <a href="https://github.com/guying2323/TGPlayer/blob/main/README.md">README</a> · GPL-3.0-or-later</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var els = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var ob = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); ob.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+    els.forEach(function(el){ ob.observe(el); });
+  } else { els.forEach(function(el){ el.classList.add('in'); }); }
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 # TGPlayer
 
+> 官网：<https://guying2323.github.io/TGPlayer/>
+>
 > 非官方 Telegram 视频播放器 · Android 手机 / 平板 / TV · 中文界面
 
 TGPlayer 用你自己的 Telegram 账号登录，浏览聊天、频道和群组里的视频，支持边下边播、离线下载、收藏、字幕与多账号。它基于 [TMPlayer](https://github.com/dracu-lah/TMPlayer) 的核心思路重建，播放器与 UI 参考了 NextPlayer 和 Findroid。
