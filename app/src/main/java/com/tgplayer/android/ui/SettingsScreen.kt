@@ -1,5 +1,7 @@
 package com.tgplayer.android.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tgplayer.android.BuildConfig
 import com.tgplayer.android.data.Downloads
+import com.tgplayer.android.data.Links
 import com.tgplayer.android.data.Settings
 import com.tgplayer.android.data.Td
 import com.tgplayer.android.ui.common.Thumbnails
@@ -60,6 +63,9 @@ fun SettingsScreen(pagePadding: Dp, onBack: () -> Unit = {}) {
     var hdThumbs by remember { mutableStateOf(settings.hdThumbnails) }
     var speed by remember { mutableStateOf(settings.defaultSpeed) }
     var speedDialog by remember { mutableStateOf(false) }
+    fun openUrl(url: String) {
+        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+    }
     var usedSpace by remember { mutableStateOf(Downloads.usedBytes()) }
     var themeMode by remember { mutableStateOf(settings.themeMode) }
     var dynamicColor by remember { mutableStateOf(settings.dynamicColor) }
@@ -155,13 +161,26 @@ fun SettingsScreen(pagePadding: Dp, onBack: () -> Unit = {}) {
 
             SectionCard("关于") {
                 SettingRow(AppIcons.Check, "版本", BuildConfig.VERSION_NAME)
+                SettingRow(AppIcons.Globe, "官网", "guying2323.github.io/TGPlayer", onClick = {
+                    openUrl(Links.WEBSITE)
+                })
+                SettingRow(AppIcons.Language, "开源代码", "github.com/guying2323/TGPlayer", onClick = {
+                    openUrl(Links.GITHUB)
+                })
                 SettingRow(AppIcons.Inbox, "开源许可", "GPL-3.0-or-later")
             }
 
             SectionCard("作者") {
-                SettingRow(AppIcons.Star, "作者名称", "留空占位")
-                SettingRow(AppIcons.Globe, "官网", "留空占位")
-                SettingRow(AppIcons.Language, "开源代码地址", "留空占位")
+                SettingRow(AppIcons.Star, "作者名称", "孤影")
+                SettingRow(AppIcons.Chat, "官方交流群", Links.QQ_GROUP_NAME + " · " + Links.QQ_GROUP_NUMBER, onClick = {
+                    openUrl(Links.QQ_GROUP_URL)
+                })
+                SettingRow(AppIcons.Globe, "官网", "guying2323.github.io/TGPlayer", onClick = {
+                    openUrl(Links.WEBSITE)
+                })
+                SettingRow(AppIcons.Language, "开源代码地址", "github.com/guying2323/TGPlayer", onClick = {
+                    openUrl(Links.GITHUB)
+                })
             }
         }
     }

@@ -6,13 +6,19 @@
 
 TGPlayer 用你自己的 Telegram 账号登录，浏览聊天、频道和群组里的视频，支持边下边播、离线下载、收藏、字幕与多账号。它基于 [TMPlayer](https://github.com/dracu-lah/TMPlayer) 的核心思路重建，播放器与 UI 参考了 NextPlayer 和 Findroid。
 
-![version](https://img.shields.io/badge/version-0.22.0-blue) ![license](https://img.shields.io/badge/license-GPL--3.0--or--later-green) ![platform](https://img.shields.io/badge/platform-Android%208.0%2B%20arm64-lightgrey)
+![version](https://img.shields.io/badge/version-0.23.0-blue) ![license](https://img.shields.io/badge/license-GPL--3.0--or--later-green) ![platform](https://img.shields.io/badge/platform-Android%208.0%2B%20arm64-lightgrey)
 
 ## 架构图
 
 ![TGPlayer 架构图](docs/tmplayer-android.svg)
 
 > 上图由 archify 生成；交互版（可缩放、悬停/深色模式）见 [docs/architecture.html](docs/architecture.html)，分层说明见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+
+## 链接
+
+- 官网：<https://guying2323.github.io/TGPlayer/>
+- 源码：<https://github.com/guying2323/TGPlayer>
+- 下载：<https://github.com/guying2323/TGPlayer/releases>
 
 ## 功能
 
@@ -101,7 +107,7 @@ cp local.properties.example local.properties
 - Debug：`app/build/outputs/apk/debug/app-debug.apk`（约 46 MB）
 - Release（R8）：`app/build/outputs/apk/release/app-release-unsigned.apk`（约 32 MB）
 
-## 质量状态（0.21.0）
+## 质量状态（0.23.0）
 
 | 检查 | 结果 |
 |---|---|
@@ -123,6 +129,13 @@ cp local.properties.example local.properties
 - 无 Compose UI / instrumentation 测试
 - 投屏、在线字幕已按需求放弃；播放器只支持 Telegram 单文件流，没有多清晰度切换
 - 下载使用当前账号会话；切号时进行中的任务可能失败重试
+
+## 作者与交流
+
+- 作者：孤影（[@guying2323](https://github.com/guying2323)）
+- 官网：<https://guying2323.github.io/TGPlayer/>
+- 开源代码：<https://github.com/guying2323/TGPlayer>
+- 官方交流群：[孤影官方群 663439636](https://qun.qq.com/universal-share/share?ac=1&authKey=XF4FsnKZhPR7qRJibpE0oKNTmyOhLj2eV89dGksGm1DaZ628fPC1Acd6Aks%2BRC2Z&busi_data=eyJncm91cENvZGUiOiI2NjM0Mzk2MzYiLCJ0b2tlbiI6ImhJMVZBM0RJb1B5M3VCYi9TUXZTcG9MRFFQNHFpTXNoUng3enp2RWJ0cHRVM3hyNTNlQjFlMCtKWVJHa0tkWmkiLCJ1aW4iOiIyNzM5MjE4MjUzIn0%3D&data=FmjCunF8IIH5D9zrr-et16IR-BA_WR2W1Uh6xOiSAkQKJ_F_KZP76DE-WoG8m6VzXIASgSLymC3CLTHvQpE61w&svctype=4&tempid=h5_group_info)
 
 ## 第三方与许可
 

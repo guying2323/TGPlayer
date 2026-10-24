@@ -31,8 +31,8 @@ android {
         applicationId = "com.tgplayer.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 30
-        versionName = "0.22.0"
+        versionCode = 32
+        versionName = "0.23.0"
 
         buildConfigField("int", "TG_API_ID", localProps.getProperty("TG_API_ID") ?: "0")
         buildConfigField("String", "TG_API_HASH", "\"${localProps.getProperty("TG_API_HASH") ?: ""}\"")
