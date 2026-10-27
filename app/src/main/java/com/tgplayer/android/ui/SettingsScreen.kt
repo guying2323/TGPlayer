@@ -1,7 +1,11 @@
 package com.tgplayer.android.ui
 
+import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings as AndroidSettings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -104,6 +108,25 @@ fun SettingsScreen(pagePadding: Dp, onBack: () -> Unit = {}) {
             SectionCard("下载") {
                 SwitchRow(AppIcons.Download, "仅 Wi-Fi 下载", wifiOnly) { wifiOnly = it; settings.wifiOnlyDownloads = it }
                 SettingRow(AppIcons.Folder, "已用空间", formatSize(usedSpace))
+                SettingRow(AppIcons.Refresh, "后台下载保护", "忽略电池优化", onClick = {
+                    val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+                    if (power?.isIgnoringBatteryOptimizations(context.packageName) == true) {
+                        Toast.makeText(context, "已开启后台下载保护", Toast.LENGTH_SHORT).show()
+                    } else {
+                        runCatching {
+                            context.startActivity(
+                                Intent(
+                                    AndroidSettings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                                    Uri.parse("package:" + context.packageName),
+                                ),
+                            )
+                        }.onFailure {
+                            runCatching {
+                                context.startActivity(Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                            }
+                        }
+                    }
+                })
                 SettingRow(AppIcons.Minus, "清空已完成任务", null, onClick = {
                     Downloads.clearFinished()
                     usedSpace = Downloads.usedBytes()

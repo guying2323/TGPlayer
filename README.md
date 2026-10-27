@@ -6,7 +6,7 @@
 
 TGPlayer 用你自己的 Telegram 账号登录，浏览聊天、频道和群组里的视频，支持边下边播、离线下载、收藏、字幕与多账号。它基于 [TMPlayer](https://github.com/dracu-lah/TMPlayer) 的核心思路重建，播放器与 UI 参考了 NextPlayer 和 Findroid。
 
-![version](https://img.shields.io/badge/version-0.23.0-blue) ![license](https://img.shields.io/badge/license-GPL--3.0--or--later-green) ![platform](https://img.shields.io/badge/platform-Android%208.0%2B%20arm64-lightgrey)
+![version](https://img.shields.io/badge/version-0.23.1-blue) ![license](https://img.shields.io/badge/license-GPL--3.0--or--later-green) ![platform](https://img.shields.io/badge/platform-Android%208.0%2B%20arm64-lightgrey)
 
 ## 架构图
 
@@ -107,7 +107,7 @@ cp local.properties.example local.properties
 - Debug：`app/build/outputs/apk/debug/app-debug.apk`（约 46 MB）
 - Release（R8）：`app/build/outputs/apk/release/app-release-unsigned.apk`（约 32 MB）
 
-## 质量状态（0.23.0）
+## 质量状态（0.23.1）
 
 | 检查 | 结果 |
 |---|---|

@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
+import android.os.PowerManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -27,9 +28,11 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val title = inputData.getString(DownloadContract.KEY_TITLE) ?: "视频"
         if (fileId == 0) return Result.failure()
 
-        if (!Td.awaitReady(90_000L)) return Result.retry()
+        // Must be foreground before the (possibly long) TDLib cold start,
+        // otherwise the OS may kill this process while it is still connecting.
+        runCatching { setForeground(foregroundInfo(title, 0L, 0L)) }
 
-        setForeground(foregroundInfo(title, 0L, 0L))
+        if (!Td.awaitReady(120_000L)) return Result.retry()
 
         return Downloads.workerPermits.withPermit {
             download(fileId, title)
@@ -37,19 +40,41 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 
     private suspend fun download(fileId: Int, title: String): Result {
+        val power = applicationContext.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val lock = power?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TGPlayer:download")?.apply {
+            setReferenceCounted(false)
+            acquire(TimeUnit.HOURS.toMillis(6))
+        }
+        return try {
+            downloadInternal(fileId, title)
+        } finally {
+            if (lock?.isHeld == true) lock.release()
+        }
+    }
+
+    private suspend fun downloadInternal(fileId: Int, title: String): Result {
         Td.download(fileId, priority = 32)
 
         val deadline = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(6)
         var lastNotification = 0L
         var lastGot = 0L
         var lastTime = System.currentTimeMillis()
+        var lastGrowthAt = System.currentTimeMillis()
+        var missingSince = 0L
         while (true) {
             delay(1_000)
-            val file = Td.file(fileId) ?: continue
+            val now = System.currentTimeMillis()
+            val file = Td.file(fileId)
+            if (file == null) {
+                if (missingSince == 0L) missingSince = now
+                if (now - missingSince > 30_000L) return Result.retry()
+                continue
+            }
+            missingSince = 0L
             val total = file.totalSize
             val got = if (file.completed) total else file.downloadedPrefix
-            val now = System.currentTimeMillis()
             val speed = if (now > lastTime) ((got - lastGot) * 1000L) / (now - lastTime) else 0L
+            if (got > lastGot) lastGrowthAt = now
             lastGot = got
             lastTime = now
             setProgress(
@@ -62,12 +87,21 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
             if (now - lastNotification > 3_000) {
                 lastNotification = now
-                setForeground(foregroundInfo(title, got, total))
+                runCatching { setForeground(foregroundInfo(title, got, total)) }
             }
 
+            // TDLib can pause a transfer (network switch, playback competing for
+            // the same file, or a re-created client). Re-arm it instead of
+            // sitting at 0 B/s until the 6h deadline.
+            if (!file.completed && now - lastGrowthAt > 20_000L) {
+                Td.download(fileId, priority = 32)
+                lastGrowthAt = now
+            }
             if (file.completed || (total > 0 && got >= total)) {
                 val path = Downloads.copyToDownloads(applicationContext, fileId, title, file.localPath)
-                    ?: return Result.failure()
+                if (path == null) {
+                    return if (runAttemptCount < 3) Result.retry() else Result.failure()
+                }
                 return Result.success(
                     workDataOf(
                         DownloadContract.KEY_PATH to path,

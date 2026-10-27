@@ -79,18 +79,14 @@ object Downloads {
 
     fun install(context: Context) {
         appContext = context.applicationContext
-        _tasks.value = loadTasks().map {
-            if (it.state == State.Downloading) it.copy(state = State.Queued) else it
-        }
+        _tasks.value = loadTasks()
         _tasks.value.forEach { observe(it.fileId) }
-        // Auto-resume tasks that were queued before the process died. Paused and
-        // finished tasks stay put.
-        _tasks.value.filter { it.state == State.Queued }.forEach { autoResume(it) }
-    }
-
-    private fun autoResume(task: Task) {
-        if (appContext == null) return
-        startWork(task)
+        // This runs in Application.onCreate for every process, including the
+        // DownloadWorker process. KEEP never cancels a running worker; it only
+        // recreates work that is missing (e.g. after an OEM killed the process).
+        _tasks.value
+            .filter { it.state == State.Queued || it.state == State.Downloading }
+            .forEach { startWork(it) }
     }
 
     fun enqueue(item: MediaItem) {
@@ -103,11 +99,11 @@ object Downloads {
             chatTitle = "",
         )
         _tasks.value = listOf(task) + _tasks.value
-        save()
+        save(sync = true)
         startWork(task)
     }
 
-    private fun startWork(task: Task) {
+    private fun startWork(task: Task, policy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP) {
         val context = appContext ?: return
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(if (Settings.get().wifiOnlyDownloads) NetworkType.UNMETERED else NetworkType.CONNECTED)
@@ -127,7 +123,7 @@ object Downloads {
             .addTag(DownloadContract.TAG)
             .build()
         WorkManager.getInstance(context)
-            .enqueueUniqueWork(DownloadContract.workName(task.fileId), ExistingWorkPolicy.REPLACE, request)
+            .enqueueUniqueWork(DownloadContract.workName(task.fileId), policy, request)
         observe(task.fileId)
     }
 
@@ -151,48 +147,55 @@ object Downloads {
         val outTotal = info.outputData.getLong(DownloadContract.KEY_TOTAL, 0L)
         val speed = info.progress.getLong(DownloadContract.KEY_SPEED, 0L)
         val path = info.outputData.getString(DownloadContract.KEY_PATH)
-        update(fileId) { task ->
-            when (info.state) {
-                WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED ->
-                    task.copy(state = State.Queued, error = null)
-                WorkInfo.State.RUNNING ->
-                    task.copy(state = State.Downloading, downloadedBytes = downloaded, totalBytes = total, speedBytesPerSec = speed, error = null)
-                WorkInfo.State.SUCCEEDED ->
-                    task.copy(
-                        state = State.Done,
-                        downloadedBytes = outDownloaded,
-                        totalBytes = outTotal,
-                        path = path ?: task.path,
-                    )
-                WorkInfo.State.FAILED ->
-                    task.copy(state = State.Failed, error = "下载失败")
-                WorkInfo.State.CANCELLED ->
-                    task.copy(state = State.Paused)
-            }
+        val current = _tasks.value.firstOrNull { it.fileId == fileId } ?: return
+        val next = when (info.state) {
+            WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED ->
+                current.copy(state = State.Queued, error = null)
+            WorkInfo.State.RUNNING ->
+                current.copy(state = State.Downloading, downloadedBytes = downloaded, totalBytes = total, speedBytesPerSec = speed, error = null)
+            WorkInfo.State.SUCCEEDED ->
+                current.copy(
+                    state = State.Done,
+                    downloadedBytes = outDownloaded,
+                    totalBytes = outTotal,
+                    speedBytesPerSec = 0L,
+                    path = path ?: current.path,
+                )
+            WorkInfo.State.FAILED ->
+                current.copy(state = State.Failed, speedBytesPerSec = 0L, error = "下载失败")
+            WorkInfo.State.CANCELLED ->
+                current.copy(state = State.Paused, speedBytesPerSec = 0L)
         }
-        save()
+        update(fileId) { next }
+        // Progress ticks every second; do not hit SharedPreferences every time.
+        if (current.state != next.state || current.path != next.path || current.error != next.error) {
+            save(sync = info.state == WorkInfo.State.SUCCEEDED || info.state == WorkInfo.State.FAILED)
+        }
     }
 
     fun pause(task: Task) {
         val context = appContext ?: return
         WorkManager.getInstance(context).cancelUniqueWork(DownloadContract.workName(task.fileId))
-        update(task.fileId) { it.copy(state = State.Paused) }
-        save()
+        scope.launch { Td.cancelDownload(task.fileId) }
+        update(task.fileId) { it.copy(state = State.Paused, speedBytesPerSec = 0L) }
+        save(sync = true)
     }
 
     fun resume(task: Task) {
         update(task.fileId) { it.copy(state = State.Queued, error = null) }
-        save()
-        startWork(task)
+        save(sync = true)
+        // Explicit user action: restart even if a stale cancelled work still exists.
+        startWork(task, ExistingWorkPolicy.REPLACE)
     }
 
     fun remove(task: Task) {
         val context = appContext ?: return
         WorkManager.getInstance(context).cancelUniqueWork(DownloadContract.workName(task.fileId))
         if (task.path.isNotBlank()) runCatching { File(task.path).delete() }
+        scope.launch { Td.cancelDownload(task.fileId) }
         _tasks.value = _tasks.value.filterNot { it.fileId == task.fileId }
         observed.remove(task.fileId)
-        save()
+        save(sync = true)
     }
 
     fun open(context: Context, task: Task): Intent? {
@@ -231,14 +234,14 @@ object Downloads {
 
     fun clearFinished() {
         _tasks.value = _tasks.value.filterNot { it.state == State.Done || it.state == State.Failed }
-        save()
+        save(sync = true)
     }
 
     private fun update(fileId: Int, block: (Task) -> Task) {
         _tasks.value = _tasks.value.map { if (it.fileId == fileId) block(it) else it }
     }
 
-    private fun save() {
+    private fun save(sync: Boolean = false) {
         val prefs = appContext?.getSharedPreferences("tgplayer", Context.MODE_PRIVATE) ?: return
         val array = JSONArray()
         _tasks.value.forEach { t ->
@@ -256,7 +259,8 @@ object Downloads {
                 put("error", t.error)
             })
         }
-        prefs.edit().putString("downloads", array.toString()).apply()
+        val editor = prefs.edit().putString("downloads", array.toString())
+        if (sync) editor.commit() else editor.apply()
     }
 
     private fun loadTasks(): List<Task> {
